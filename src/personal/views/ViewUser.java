@@ -3,11 +3,13 @@ package personal.views;
 import personal.controllers.UserController;
 import personal.model.User;
 
+import java.util.List;
 import java.util.Scanner;
 
 public class ViewUser {
 
     private UserController userController;
+    private ValidateData validate = new ValidateData();
 
     public ViewUser(UserController userController) {
         this.userController = userController;
@@ -17,26 +19,83 @@ public class ViewUser {
         Commands com = Commands.NONE;
 
         while (true) {
+            try {
             String command = prompt("Введите команду: ");
-            com = Commands.valueOf(command);
+            com = Commands.valueOf(command.toUpperCase());
             if (com == Commands.EXIT) return;
             switch (com) {
                 case CREATE:
-                    String firstName = prompt("Имя: ");
-                    String lastName = prompt("Фамилия: ");
-                    String phone = prompt("Номер телефона: ");
-                    userController.saveUser(new User(firstName, lastName, phone));
+                    createUser();
+                    
                     break;
                 case READ:
-                    String id = prompt("Идентификатор пользователя: ");
+                    readUser();
+                    
+                    break;
+                case LIST:
+                    printAllUsers();
+                    break;
+                case UPDATE:
+                    updateUser();
+                    break;
+                case DELETE:
+                    deleteUser();
+                    break;
+            }
+        
+                } catch (Exception e ){
+                    System.out.println(e.getMessage());
+                }
+    }
+}
+    private void deleteUser() {
+        String userId = readUser();
+        userController.deleteUser(userId);
+    
+    }
+
+    private void createUser() {
+        userController.saveUser(inputUser());
+    }
+
+    private User inputUser(){
+        String firstName;
+        String lastName;
+        String phone;
+        do {
+            firstName = prompt("Имя: ");
+         } while (validate.checkFirstName(firstName));
+        do 
+             {lastName = prompt("Фамилия: ");}
+                 while (validate.checkLastName(lastName));
+        do {
+             phone = prompt("Номер телефона: ");
+        } while(validate.checkPhoneNumber(phone));
+        
+        return new User(firstName, lastName, phone);
+    }
+
+    private String readUser(){
+        String id = prompt("Идентификатор пользователя: ");
                     try {
                         User user = userController.readUser(id);
                         System.out.println(user);
                     } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
-                    break;
-            }
+        return id;
+    }
+    private void updateUser(){
+        String id = readUser();
+        User updateUser = inputUser();
+        updateUser.setId(id);
+        userController.updateUser(updateUser);
+
+    }
+    private void printAllUsers(){
+        List<User> users = userController.getUsers();
+        for (User user : users) {
+            System.out.println(user);
         }
     }
 
@@ -45,4 +104,5 @@ public class ViewUser {
         System.out.print(message);
         return in.nextLine();
     }
+    
 }
